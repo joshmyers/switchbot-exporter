@@ -81,7 +81,7 @@ func run() error {
 				} else {
 					errCh <- nil
 				}
-				log.Print("relaoded devices")
+				log.Print("reloaded devices")
 			}
 		}
 	}()
@@ -116,7 +116,7 @@ func run() error {
 		}
 
 		switch status.Type {
-		case switchbot.Meter, switchbot.MeterPlus:
+		case switchbot.Meter, switchbot.MeterPlus, switchbot.WoIOSensor:
 			meterHumidity := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: "switchbot",
 				Subsystem: "meter",
