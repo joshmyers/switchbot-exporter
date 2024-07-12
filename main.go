@@ -20,6 +20,7 @@ var (
 	listenAddress = flag.String("web.listen-address", ":8080", "The address to listen on for HTTP requests")
 	openToken     = flag.String("switchbot.open-token", "", "The open token for switchbot-api")
 	secretKey     = flag.String("switchbot.secret-key", "", "The secret key for switchbot-api")
+	deviceMap     = map[string]string{}
 )
 
 // deviceLabels is global cache gauge which stores device id and device name as its label.
@@ -121,19 +122,19 @@ func run() error {
 				Namespace: "switchbot",
 				Subsystem: "meter",
 				Name:      "humidity",
-			}, []string{"device_id"})
+			}, []string{"device_id", "device_name"})
 
 			meterTemperature := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: "switchbot",
 				Subsystem: "meter",
 				Name:      "temperature",
-			}, []string{"device_id"})
+			}, []string{"device_id", "device_name"})
 
 			registry.MustRegister(deviceLabels) // register global device labels cache
 			registry.MustRegister(meterHumidity, meterTemperature)
 
-			meterHumidity.WithLabelValues(status.ID).Set(float64(status.Humidity))
-			meterTemperature.WithLabelValues(status.ID).Set(status.Temperature)
+			meterHumidity.WithLabelValues(status.ID, deviceMap[status.ID]).Set(float64(status.Humidity))
+			meterTemperature.WithLabelValues(status.ID, deviceMap[status.ID]).Set(status.Temperature)
 		case switchbot.PlugMiniJP:
 			plugWeight := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: "switchbot",
@@ -194,6 +195,7 @@ func reloadDevices(sc *switchbot.Client) error {
 
 	for _, device := range devices {
 		deviceLabels.WithLabelValues(device.ID, device.Name).Set(0)
+		deviceMap[device.ID] = device.Name
 	}
 	for _, device := range infrared {
 		deviceLabels.WithLabelValues(device.ID, device.Name).Set(0)
